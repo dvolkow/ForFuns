@@ -1,3 +1,6 @@
+/**
+ * Вычисление следующего большего числа с тем же количеством единичных битов
+ */
 unsigned snoob(unsigned x) 
 {
   unsigned smallest, ripple, ones; 
