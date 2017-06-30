@@ -33,4 +33,8 @@ int main()
 	g.mod_2pi(); 
 	std::cout << "g after nonconst = " << g << "\n";
 
+	std::cout << "left and right ops test\n";
+	std::cout << ((5 - f) == (f - 5)) << "\n";
+	std::cout << "==: " << (pi == Deg<short>(b.toRad())) << "\n";
+
 }

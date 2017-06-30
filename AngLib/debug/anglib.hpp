@@ -15,42 +15,58 @@ namespace anglib
 		const double SEC_IN_RAD = 360 * 60 * 60 / (2 * M_PI);
 		const double MIN_AT_HOUR = double(1) / MIN_IN_DEG;
 		const double SEC_AT_HOUR = double(1) / SEC_IN_DEG;
+		double PRECISION_COMPARE = 1e-13;
 	}
 
 	template <typename IntType>
 	class Deg
 	{
-		double sec;
-		IntType min, deg;
+		double sec_;
+		IntType min_, deg_;
 
 	public:
 
-		Deg() noexcept : sec(0), min(0), deg(0) {}
+		Deg() noexcept : sec_(0), min_(0), deg_(0) {}
 
-		Deg(const Deg & d) noexcept : sec(d.sec), min(d.min), deg(d.deg) {}
+		Deg(const Deg & d) noexcept : sec_(d.sec_), min_(d.min_), deg_(d.deg_) {}
 
-		Deg(const IntType deg_, const IntType min_, const double sec_) noexcept : sec(sec_), min(min_), deg(deg_)
+		Deg(const IntType deg__, const IntType min__, const double sec__) noexcept : sec_(sec__), min_(min__), deg_(deg__)
 		{}
 
 		Deg(double rad) noexcept 
 		{
-    		sec = Const::SEC_IN_RAD * rad;
-			deg = sec / Const::SEC_IN_DEG;
-			sec -= Const::SEC_IN_DEG * deg;
-			min = sec / Const::MIN_IN_DEG;
-			sec -= Const::MIN_IN_DEG * min;
+    		sec_ = Const::SEC_IN_RAD * rad;
+			deg_ = sec_ / Const::SEC_IN_DEG;
+			sec_ -= Const::SEC_IN_DEG * deg_;
+			min_ = sec_ / Const::MIN_IN_DEG;
+			sec_ -= Const::MIN_IN_DEG * min_;
 		}
 
 		~Deg() noexcept {}
 
+		IntType min() const noexcept
+		{
+			return min_;
+		}
+
+		IntType deg() const noexcept
+		{
+			return deg_;
+		}
+
+		double sec() const noexcept
+		{
+			return sec_;
+		}
+
 		double toRad() const noexcept 
 		{
-			return (sec / Const::SEC_IN_DEG + double(min) / Const::MIN_IN_DEG + deg) * M_PI / 180;
+			return (sec_ / Const::SEC_IN_DEG + double(min_) / Const::MIN_IN_DEG + deg_) * M_PI / 180;
 		}
 
 		double toSec() const noexcept
 		{
-			return deg * Const::SEC_IN_DEG + min * Const::MIN_IN_DEG + sec;
+			return deg_ * Const::SEC_IN_DEG + min_ * Const::MIN_IN_DEG + sec_;
 		}
 
 		double toHour() const noexcept
@@ -61,18 +77,19 @@ namespace anglib
 		template <typename AIntType>
 		AIntType mod_2pi() const noexcept
 		{
-			AIntType z = fabs(double(this->deg) / Const::DEG_IN_2PI);
+			AIntType z = fabs(double(this->deg_) / Const::DEG_IN_2PI);
 			return z;
 		}
 
+		//---NONCONST!-----
 		void mod_2pi() noexcept
 		{
-			this->deg = this->deg % Const::DEG_IN_2PI;
+			this->deg_ = this->deg_ % Const::DEG_IN_2PI;
 		}
 
 		friend std::ostream & operator<<(std::ostream & s, const Deg & dg)
 		{
-			s << dg.deg << " deg " << dg.min << " min " << dg.sec << " sec";
+			s << dg.deg_ << " deg " << dg.min_ << " min " << dg.sec_ << " sec";
 			return s;
 		}
 
@@ -105,57 +122,56 @@ namespace anglib
 		}
 
 		template <typename AriphmeticType>
-		friend const Deg operator*(const Deg & dl, const AriphmeticType & mult) noexcept
+		friend const Deg operator-(const AriphmeticType & subd, const Deg & dl) noexcept
+		{
+			return Deg(subd - dl.toRad());
+		}
+
+		template <typename AriphmeticType>
+		friend const Deg operator* (const Deg & dl, const AriphmeticType & mult) noexcept
 		{
 			return Deg(dl.toRad() * mult);
 		}
 
 		template <typename AriphmeticType>
-		friend const Deg operator/(const Deg & dl, const AriphmeticType & divs) noexcept
+		friend const Deg operator/ (const Deg & dl, const AriphmeticType & divs) noexcept
 		{
 			return Deg(dl.toRad() / divs);
 		}
 
-		template <typename AriphmeticType>
-		const Deg operator*(const AriphmeticType & mult) noexcept
+		bool operator==(const Deg & a)
 		{
-			return Deg(this->toRad() * mult);
-		}
-
-		template <typename AriphmeticType>
-		const Deg operator/(const AriphmeticType & divs) noexcept
-		{
-			return Deg(this->toRad() / divs);
+			return a->deg_ == this->deg_ && this->min_ == a->min_ && dabs(a->sec_ - this->sec_) < Const::PRECISION_COMPARE;
 		}
 	};
 
 	template <typename IntType>
 	class Hour
 	{
-		double sec;
-		IntType min, hour;
+		double sec_;
+		IntType min_, hour;
 
 	public:
 
-		Hour() noexcept : sec(0), min(0), hour(0) {}
+		Hour() noexcept : sec_(0), min_(0), hour(0) {}
 
-		Hour(const Hour & h) noexcept : sec(h.sec), min(h.min), hour(h.hour) {}
-		Hour(short hour_, short min_, double sec_) noexcept : sec(sec_), min(min_), hour(hour_)
+		Hour(const Hour & h) noexcept : sec_(h.sec_), min_(h.min_), hour(h.hour) {}
+		Hour(short hour_, short min__, double sec__) noexcept : sec_(sec__), min_(min__), hour(hour_)
 		{}
 
 		Hour(double rad) noexcept
 		{
-    		sec = Const::SEC_IN_RAD * rad / 15;
-			hour = sec / Const::SEC_IN_DEG;
-			sec -= Const::SEC_IN_DEG * hour;
-			min = sec / Const::MIN_IN_DEG;
-			sec -= Const::MIN_IN_DEG * min;
+    		sec_ = Const::SEC_IN_RAD * rad / 15;
+			hour = sec_ / Const::SEC_IN_DEG;
+			sec_ -= Const::SEC_IN_DEG * hour;
+			min_ = sec_ / Const::MIN_IN_DEG;
+			sec_ -= Const::MIN_IN_DEG * min_;
 		}
 
 		double toSec() const noexcept
 		{
-			return (hour * Const::SEC_IN_DEG + min * Const::MIN_IN_DEG +
-						sec) * 15 ;
+			return (hour * Const::SEC_IN_DEG + min_ * Const::MIN_IN_DEG +
+						sec_) * 15 ;
 		}
 
 		double toHour() const noexcept
@@ -170,7 +186,7 @@ namespace anglib
 
 		friend std::ostream & operator<<(std::ostream &s, const Hour &hr)
 		{
-			s << hr.hour << " h " << hr.min << " m " << hr.sec << " s";
+			s << hr.hour << " h " << hr.min_ << " m " << hr.sec_ << " s";
 			return s;
 		}
 
@@ -200,6 +216,14 @@ namespace anglib
 	namespace Const
 	{
 		Deg<short> pi = Deg<short>(180, 0, 0);
+	}
+
+
+	//--------------implementations another ops-----------------
+	template <typename IntType>
+	inline bool operator==(const Deg<IntType> & a, const Deg<IntType> & b)
+	{
+		return a->deg_ == b->deg_ && b->min_ == a->min_ && dabs(a->sec_ - b->sec_) < Const::PRECISION_COMPARE;
 	}
 }
 #endif
