@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# --- импорт необходимых модулей
 import math
 import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+# --- Биномиальное распределение
 N = 20                                      # --- Заданный параметр распределения
 P = 0.2                                     # --- Заданный параметр распределения
-COUNT_ELEMENT = 1000                        # --- Количество элементов в выборке
-COUNT_ROUNDS = 100                          # --- Количество элементов в выборке
+M = N * P                                   # --- Теоретическое матожидание
+D = N * P * (1 - P)                         # --- Теоретическая дисперсия
 
-M = N * P          # --- Теоретическое матожидание
-D = N * P * (1 - P)          # --- Теоретическая дисперсия
+
+COUNT_ELEMENT = 1000                        # --- Количество элементов в выборке
+COUNT_ROUNDS = 100                          # --- Количество раундов получения выборок
 
 # --- массивы для хранения данных для построения графиков:
 means_all = []                              # --- математические ожидания
@@ -20,42 +23,67 @@ disp_all = []                               # --- дисперсии
 means_error_all = []                        # --- кв. ошибок матожданий
 disps_error_all = []                        # --- кв. ошибок дисперсий
 
-for i in range(COUNT_ROUNDS):
-    tmp_sum = 0
+# --- генерация данных
+for i in range(COUNT_ROUNDS):               # --- в этом цикле получаем выборки
+    tmp_sum = 0                             # --- здесь хранится текущая сумма
+
+    # --- создаем выборку из COUNT_ELEMENT элементов:
     random_array = np.array([np.random.binomial(N, P) for i in range(COUNT_ELEMENT)])
+
+    # --- врЕменные массивы (для соответствующих параметров):
     tmp_means = []
     tmp_error_means = []
     tmp_disps = []
     tmp_error_disps = []
 
-    for i in range(COUNT_ELEMENT):
-        tmp_sum += random_array[i]
-        current_mean = tmp_sum / (i + 1)
-        tmp_means.append(current_mean)
-        tmp_error_means.append(math.log((current_mean - M) ** 2 + 1, 2))
+    for i in range(COUNT_ELEMENT):          # --- в этом цикле считаем матожидания и дисперсии
+        tmp_sum += random_array[i]          # --- обновляем сумму
+        current_mean = tmp_sum / (i + 1.0)    # --- вычисляем текущее среднее
+        tmp_means.append(current_mean)      # --- добавляем в соответствующий массив
 
+        # --- вычисляем квадрат ошибки среднего и записываем
+        tmp_error_means.append((current_mean - M) ** 2)
+
+        # --- вычисляем второй центральный момент
         current_disp = sum((random_array[:i] - current_mean) ** 2) / (i + 1)
-        tmp_disps.append(current_disp)
-        tmp_error_disps.append(math.log((current_disp - D) ** 2, 2))
+        tmp_disps.append(current_disp)      # --- записываем его
 
+        # --- вычисляем квадрат ошибки дисперсии и записываем
+        tmp_error_disps.append((current_disp - D) ** 2)
+
+    # --- добавляем временные массивы в глобальные:
     means_all.append(tmp_means)
     means_error_all.append(tmp_error_means)
     disp_all.append(tmp_disps)
     disps_error_all.append(tmp_error_disps)
-    plt.plot(tmp_means)
 
+    plt.plot(tmp_means) # --- здесь же рисуем средние
+
+# --- рисуем линию для теоретического среднего:
+plt.plot([M for i in range(COUNT_ELEMENT)], 'g--', linewidth=3.5)
+# --- рисуем линии для границы 3 sigma:
+plt.plot([M + 3.0 * math.sqrt(D / COUNT_ELEMENT) for i in range(COUNT_ELEMENT)], 'r--', linewidth=1.5)
+plt.plot([M - 3.0 * math.sqrt(D / COUNT_ELEMENT) for i in range(COUNT_ELEMENT)], 'r--', linewidth=1.5)
 plt.show() # --- cначала рисуем зависимость средних от N
 
+# --- устанавливаем логарифмические масштабы по осям, основание 2
+plt.xscale('log', basex=2)
+plt.yscale('log', basey=2)
 for i in range(COUNT_ROUNDS):
-    plt.plot([math.log(j + 1, 2) for j in range(COUNT_ELEMENT)], means_error_all[i])
+    plt.plot(means_error_all[i])
 plt.show() # --- квадрат ошибки среднего от N
 
 for i in range(COUNT_ROUNDS):
     plt.plot(disp_all[i])
+# --- рисуем линию для теоретической дисперсии:
+plt.plot([D for i in range(COUNT_ELEMENT)], 'g--', linewidth=3.5)
 plt.show() # --- дисперсия от N
 
+# --- устанавливаем логарифмические масштабы по осям, основание 2
+plt.xscale('log', basex=2)
+plt.yscale('log', basey=2)
 for i in range(COUNT_ROUNDS):
-    plt.plot([math.log(j + 1, 2) for j in range(COUNT_ELEMENT)], disps_error_all[i])
+    plt.plot(disps_error_all[i])
 plt.show() # --- квадрат ошибки дисперсии от N
 
 # --- осредненные графики:
@@ -73,8 +101,14 @@ for i in range(COUNT_ELEMENT):
     mean.append(tmp_sum_m)
     disp.append(tmp_sum_d)
 
-plt.plot([math.log(j + 1, 2) for j in range(COUNT_ELEMENT)], mean)
+# --- устанавливаем логарифмические масштабы по осям, основание 2
+plt.xscale('log', basex=2)
+plt.yscale('log', basey=2)
+plt.plot(mean)
 plt.show() # --- квадрат ошибки среднего от N
 
-plt.plot([math.log(j + 1, 2) for j in range(COUNT_ELEMENT)], disp)
+# --- устанавливаем логарифмические масштабы по осям, основание 2
+plt.xscale('log', basex=2)
+plt.yscale('log', basey=2)
+plt.plot(disp)
 plt.show() # --- квадрат ошибки дисперсии от N
